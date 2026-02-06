@@ -17,6 +17,7 @@ services:
     ports:
       - "19092:19092"
       - "9092:9092"
+      - "9644:9644"
     mem_limit: 512m
     volumes:
       - redpanda_data:/var/lib/redpanda/data
@@ -47,6 +48,57 @@ services:
     mem_limit: 512m
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  processor:
+    build: ./processor
+    depends_on:
+      - redpanda
+      - minio
+      - postgis
+    environment:
+      KAFKA_BROKER: redpanda:9092
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+      PG_CONN_STR: dbname=seopc_metadata user=admin password=password123 host=postgis port=5432
+    volumes:
+      - ./local_sync:/local_sync
+    deploy:
+      replicas: 1
+    mem_limit: 1024m
+
+  satellite:
+    build: ./satellite
+    depends_on:
+      - redpanda
+      - minio
+    environment:
+      KAFKA_BROKER: redpanda:9092
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+      WATCH_DIR: /downlink_buffer
+    volumes:
+      - ./downlink_buffer:/downlink_buffer
+    mem_limit: 128m
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    mem_limit: 256m
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    mem_limit: 256m
 
 volumes:
   redpanda_data:

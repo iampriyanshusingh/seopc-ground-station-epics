@@ -16,15 +16,22 @@ import (
 )
 
 // Config
-const (
-	minioEndpoint   = "localhost:9000"
-	minioAccessID   = "admin"
-	minioSecretKey  = "password123"
+var (
+	minioEndpoint   = getEnv("MINIO_ENDPOINT", "localhost:9000")
+	minioAccessID   = getEnv("MINIO_ROOT_USER", "admin")
+	minioSecretKey  = getEnv("MINIO_ROOT_PASSWORD", "password123")
 	minioBucket     = "satellite-raw"
-	watchDir        = "../downlink_buffer"
-	kafkaBroker     = "localhost:19092"
+	watchDir        = getEnv("WATCH_DIR", "../downlink_buffer")
+	kafkaBroker     = getEnv("KAFKA_BROKER", "localhost:19092")
 	kafkaTopic      = "eo-events"
 )
+
+func getEnv(key, fallback string) string {
+    if value, ok := os.LookupEnv(key); ok {
+        return value
+    }
+    return fallback
+}
 
 type Event struct {
 	EventID string `json:"event_id"`
