@@ -85,7 +85,7 @@ func checkDb(db *sql.DB) tea.Cmd {
 		db.QueryRow("SELECT COUNT(*) FROM processing_logs").Scan(&count)
 
 		// Get latest
-		err := db.QueryRow("SELECT filename, latency_ms, detections FROM processing_logs ORDER BY processed_at DESC LIMIT 1").Scan(&lastFile, &latency, &detections)
+		err := db.QueryRow("SELECT filename, latency_ms, result::text FROM processing_logs ORDER BY processed_at DESC LIMIT 1").Scan(&lastFile, &latency, &detections)
 		
 		dStr := "Scanning..."
 		if err == nil {
@@ -235,7 +235,7 @@ func (m model) dashboardView() string {
 	
 	// Telemetry Box
 	telemetryContent := fmt.Sprintf(
-		"LATEST FILE:  %s\n\nLATENCY:      %d ms\n\nYOLO DETECT:  %s",
+		"LATEST FILE:  %s\n\nLATENCY:      %d ms\n\nCV DETECT:    %s",
 		m.lastFile,
 		m.latency,
 		strings.ReplaceAll(m.detections, "\"", ""),

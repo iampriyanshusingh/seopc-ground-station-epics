@@ -75,33 +75,47 @@ def main():
         secure=False
     )
 
-    if not minio_client.bucket_exists(DEST_BUCKET):
+    print("Connecting to MinIO...")
+    retries = 15
+    while retries > 0:
         try:
-            minio_client.make_bucket(DEST_BUCKET)
-        except Exception:
-            pass
+            if not minio_client.bucket_exists(DEST_BUCKET):
+                minio_client.make_bucket(DEST_BUCKET)
+            print("Connected to MinIO.")
+            break
+        except Exception as e:
+            print(f"MinIO connection failed: {e}. Retrying...")
+            time.sleep(2)
+            retries -= 1
+            if retries == 0: return
 
     # ===== POSTGRES =====
-    try:
-        conn = psycopg2.connect(PG_CONN_STR)
-        conn.autocommit = True
-        cur = conn.cursor()
+    print("Connecting to Postgres...")
+    retries = 15
+    conn = None
+    while retries > 0:
+        try:
+            conn = psycopg2.connect(PG_CONN_STR)
+            conn.autocommit = True
+            cur = conn.cursor()
 
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS processing_logs (
-                id SERIAL PRIMARY KEY,
-                filename TEXT NOT NULL,
-                processed_at TIMESTAMPTZ DEFAULT NOW(),
-                latency_ms INTEGER,
-                result JSONB
-            );
-        """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS processing_logs (
+                    id SERIAL PRIMARY KEY,
+                    filename TEXT NOT NULL,
+                    processed_at TIMESTAMPTZ DEFAULT NOW(),
+                    latency_ms INTEGER,
+                    result text
+                );
+            """)
 
-        print("Connected to Postgres.")
-
-    except Exception as e:
-        print(f"Postgres connection failed: {e}")
-        return
+            print("Connected to Postgres.")
+            break
+        except Exception as e:
+            print(f"Postgres connection failed: {e}. Retrying...")
+            time.sleep(2)
+            retries -= 1
+            if retries == 0: return
 
     # ===== KAFKA =====
     consumer = None
@@ -154,7 +168,8 @@ def main():
                 continue
 
             # ===== EMBEDDING =====
-            query_emb = get_embedding(img)
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            query_emb = get_embedding(img_rgb)
 
             # ===== SIMILARITY SEARCH =====
             sims = cosine_similarity(query_emb, embeddings)[0]

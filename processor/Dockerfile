@@ -18,8 +18,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source
 COPY worker.py .
+COPY *.npy .
 
-# Pre-download YOLOv8n model to bake it into image
-RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+# Pre-download ViT model to bake it into image
+RUN python -c "import timm; timm.create_model('vit_base_patch16_224', pretrained=True)"
 
-CMD ["python", "worker.py"]
+ENV PYTHONUNBUFFERED=1
+CMD ["python", "-u", "worker.py"]

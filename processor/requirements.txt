@@ -2,4 +2,6 @@ kafka-python
 minio
 opencv-python-headless
 psycopg2-binary
-ultralytics
+timm
+pandas
+scikit-learn

@@ -48,18 +48,29 @@ func main() {
 		log.Fatalln("MinIO connection failed:", err)
 	}
 
-	// Ensure bucket exists
+	// Ensure bucket exists (with retry loop for MinIO startup)
 	ctx := context.Background()
-	err = minioClient.MakeBucket(ctx, minioBucket, minio.MakeBucketOptions{})
-	if err != nil {
+	maxRetries := 15
+	for i := 0; i < maxRetries; i++ {
+		err = minioClient.MakeBucket(ctx, minioBucket, minio.MakeBucketOptions{})
+		if err == nil {
+			log.Printf("Bucket %s created\n", minioBucket)
+			break
+		}
+		
 		exists, errBucketExists := minioClient.BucketExists(ctx, minioBucket)
 		if errBucketExists == nil && exists {
 			log.Printf("Bucket %s already exists\n", minioBucket)
-		} else {
-			log.Fatalln("Failed to create bucket:", err)
+			err = nil
+			break
 		}
-	} else {
-		log.Printf("Bucket %s created\n", minioBucket)
+		
+		log.Printf("Waiting for MinIO to start (attempt %d/%d)...\n", i+1, maxRetries)
+		time.Sleep(2 * time.Second)
+	}
+
+	if err != nil {
+		log.Fatalln("Failed to connect to MinIO after retries:", err)
 	}
 
 	// 2. Kafka Connection (Redpanda)

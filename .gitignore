@@ -1,4 +1,8 @@
-# Binaries and Object Files
+# ===========================
+# Project Argus — .gitignore
+# ===========================
+
+# ── Compiled Binaries ──────────────────────────────
 *.exe
 *.o
 *.a
@@ -8,25 +12,64 @@ gui/visualizer
 dashboard/dashboard
 satellite/satellite
 
-# Python
-processor/venv/
-processor/__pycache__/
+# ── Python ────────────────────────────────────────
+__pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+processor/venv/
+processor/.venv/
+.venv/
+*.egg-info/
+dist/
+build/
 
-# Docker Volumes (if mapped locally)
+# ── Node / npm (just in case) ─────────────────────
+node_modules/
+npm-debug.log*
+
+# ── Docker local volumes ───────────────────────────
 postgres_data/
 minio_data/
 redpanda_data/
 
-# Data Buffers (Keep the directories, ignore content)
+# ── Data buffers (keep dirs, ignore content) ───────
 downlink_buffer/*
 !downlink_buffer/.gitkeep
 local_sync/*
 !local_sync/.gitkeep
 
-# Raylib Source (Downloaded during build)
-gui/raylib_src/
+# ── Large satellite data files ─────────────────────
+*.zip
+*.zipZone.Identifier
+*.tif
+*.tiff
+*.npy
+# Uncomment below to track embeddings (large files — use Git LFS instead)
+# !processor/embeddings.npy
+# !processor/lats.npy
+# !processor/lons.npy
 
-# IDEs
+# ── Raw satellite scene directories ───────────────
+R*/
+
+# ── Tiles (large image dataset — use Git LFS) ─────
+tiles/*.jpg
+tiles/*.png
+!tiles/.gitkeep
+
+# ── Logs ──────────────────────────────────────────
+*.log
+/tmp/argus_gui.log
+
+# ── IDEs ──────────────────────────────────────────
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# ── OS ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
