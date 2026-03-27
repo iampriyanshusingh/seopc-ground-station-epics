@@ -45,11 +45,9 @@ local_sync/*
 *.zipZone.Identifier
 *.tif
 *.tiff
-*.npy
-# Uncomment below to track embeddings (large files — use Git LFS instead)
-# !processor/embeddings.npy
-# !processor/lats.npy
-# !processor/lons.npy
+
+# .npy — processor embeddings are tracked directly (~2.5MB, essential for runtime)
+# If the tile dataset grows large, migrate to Git LFS instead
 
 # ── Raw satellite scene directories ───────────────
 R*/
